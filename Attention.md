@@ -2,9 +2,9 @@
 ---
 ## 本质  
 Attention 是一种加权求和的方法，给在分类模型中提供更多贡献的图片部分较大的比重，贡献小的部分较小的比重，使得学习机能把更多的有效计算放在更合适的位置上，这样可以有效的减少计算量。  
-$$
-h^{*}= \sum \alpha _{i}+h_{i}  
-$$
+
+![8CWqI0.png](https://s2.ax1x.com/2020/03/10/8CWqI0.png)
+
 其中alpha就是权重。而Attention所做的事情就是把alpha计算出来。  
 ## 如何设计  
 1.  根据hi和关注对象的相关关系设计一个打分函数。  
@@ -17,17 +17,14 @@ $$
 一个Attention Function被描述为对value向量做权重和计算，而权重是由query和key向量计算得来的。在传统的Attention中，q是来自外部的。  
 ### self-attention  
 1. Scaled Dot-Product Attention  
-$$
-Attention(Q,K,V)=softmax(\frac{QK^{T}}{\sqrt{d_{k}}})V
-$$
+
+![8CfCZR.png](https://s2.ax1x.com/2020/03/10/8CfCZR.png)
+
 其中，Q,K,V分别是query,key,value的向量集合——矩阵。
 2. Multi-Head Attention  
-$$
-MultiHead(Q,K,V)=Concat(head_{1},head_{2},....head_{h})W^{o}  
-$$
-$$
-where head_{i}=Attention(QW_{i}^{Q},KW_{i}^{K},VW_{i}^{V})
-$$
+
+![8CfPd1.png](https://s2.ax1x.com/2020/03/10/8CfPd1.png)
+
 其中W是学习机需要学习的参数。  
 其本质就是利用多个Q进行Attention平行计算，使得每个Attention关注不同的部分以后再进行concat。  
 ![89Qq29.png](https://s2.ax1x.com/2020/03/09/89Qq29.png)
@@ -40,40 +37,40 @@ $$
 + 可变输入性，可以很容易的结合其他操作
 ### Formulation  
 通用公式
-$$
-y_{i}=\frac{1}{c(x)}\sum_{\vee j}^{}f(x_{i},x_{j})g(x_{j})
-$$
+
+![8CfeQe.png](https://s2.ax1x.com/2020/03/10/8CfeQe.png)
+
 其中i是输出的像素点位置，j是枚举的所有像素点。x是输入的图片或者特征，y是输出的信息，其尺寸和x一样大（可变输入性）。  
 f函数和g函数的其他变种：  
 + Gaussian  
-$$
-f(x_{i},x_{j})=exp(x_{i}^{T}x_{j})
-$$
+
+![8CfrWT.png](https://s2.ax1x.com/2020/03/10/8CfrWT.png)
+
 令归一化元素c(x)为f遍历j的和。  
 + Embedded Gaussian  
-$$
-f(x_{i},x_{j})=exp(\theta (x_{i})^{T}\phi (x_{j}))
-$$
+
+![8Cf4Fx.png](https://s2.ax1x.com/2020/03/10/8Cf4Fx.png)
+
 令归一化元素c(x)为f遍历j的和。  
 我们注意到最近提出来的应用于机器翻译的self-attention是在高斯嵌入函数的non-local operation的一个特例。因为归一化计算元素c(x)可以被看成是沿着j方向做的softmax运算。  
 所以我们就得到了：  
-$$
-y=softmax(x^{T}W_{\theta }^{T}W_{\phi }x)
-$$
+
+![8CfTSO.png](https://s2.ax1x.com/2020/03/10/8CfTSO.png)
+
 因此作者认为softmax是不必要的，为了说明其不必要性，作者还提出了以下两个选择；  
 + Dot product  
-$$
-f(x_{i},x_{j})=\theta (x_{i})^{T}\phi (x_{j})
-$$
+
+![8CfO0A.png](https://s2.ax1x.com/2020/03/10/8CfO0A.png)
+
 + Concatenation  
-$$
-f(x_{i},x_{j})=ReLu(w_{f}^{T}[\theta (x_{i}),\phi (x_{j})])
-$$
+
+![8CfxtP.png](https://s2.ax1x.com/2020/03/10/8CfxtP.png)
+
 ### non-local block  
 作者将上面的方程进行包装，得到一个block，从而可以方便地插入到现有的框架中去，一个局部块定义如下：  
-$$
-z_{i}=W_{z}y_{i}+x_{i}  
-$$
+
+![8Chk0s.png](https://s2.ax1x.com/2020/03/10/8Chk0s.png)
+
 其中加xi是一个残差运算，是为了让其更好的插入到现有的网络中使用。  
 具体操作如下图：  
 ![3xVnHI.png](https://s2.ax1x.com/2020/03/08/3xVnHI.png)  
@@ -90,30 +87,26 @@ $$
 ### Residual Attention Network  
 包含两部分：mask attention and trunk branch。  
 主干部分的作用是特征提取，可以选择任意一种最先进的网络结构。掩膜分支通过对特征图的处理输出维度一致的注意力特征图（Attention Feature Map），然后使用点乘操作将两个分支的特征图组合在一起，得到最终的输出特征图。  
-$$
-H_{i,c(x)}=M_{i,c(x)}*T_{i,c(x)}  
-$$
+
+![8ChMX4.png](https://s2.ax1x.com/2020/03/10/8ChMX4.png)
+
 其中T是主干部分的输出，M是掩膜部分的输出。i是空间所有的位置，c是channel的索引。  
 增加残差结构以后变为:  
-$$
-H_{i,c(x)}=(1+M_{i,c(x)})*T_{i,c(x)}  
-$$
+
+![8Ch37R.png](https://s2.ax1x.com/2020/03/10/8Ch37R.png)
+
 其网络结构如下图所示：
 ![3xlvid.png](https://s2.ax1x.com/2020/03/08/3xlvid.png)  
+
 ### soft mask branch  
 本结构之后包含快速前馈扫描和自顶向下的反馈步骤两个部分，前者可以快速的获取全图的信息，后者可以将将获得的全局信息与图片特征联系起来。这两个步骤反映了卷积网络上就是bottom-up和top-down结构（pooling and interpolation）。
 ![3x39h9.png](https://s2.ax1x.com/2020/03/08/3x39h9.png)  
+
 ### Spatial Attention and Channel Attention 
 对于不同的Attention模型，采取了不同的归一化方程；对mixed Attention采用正常的sigmoid方程进行归一化，对于channels Attention采用了二范数的归一化，spacial Attention先对每一个通道的feature map进行了归一化，然后再进行sigmoid。
-$$
-f_{1(x_{i,c})}=\frac{1}{1+exp(-x_{i,c})}
-$$
-$$
-f_{2(x_{i,c})}=\frac{x_{i,c}}{\left \| x_{i} \right \|}  
-$$
-$$
-f_{3(x_{i,c})}=\frac{1}{1+exp(-(x_{i,c}-mean_{c})/std_{c}))}  
-$$
+
+![8ChYh6.png](https://s2.ax1x.com/2020/03/10/8ChYh6.png)
+
 其中mean和std分别代表了平局值和标准差。 
 
 ## Attention to Scale: Scale-aware Semantic Image Segmentation  
@@ -124,14 +117,14 @@ $$
 ### Attention model for scales  
 用attention替换pooling之后，可以可视化每个图像位置在每个尺度上的特征的影响。  
 其公式如下：  
-$$
-g_{i,c}=\sum_{s=1}^{s}w_{i}^{s}f_{i,c}^{s}
-$$
+
+![8Ch64P.png](https://s2.ax1x.com/2020/03/10/8Ch64P.png)
+
 其中s指不同尺寸大小的图片，f是指score map的运算，c指有多少类关注对象，g是对f进行权重求和运算后的结果，在进行权重求和之前要先对f进行上采样获得一样的尺寸。  
 权重w的计算如下:    
-$$
-w_{i}^{s}=\frac{exp(h_{i}^{s})}{\sum_{t=1}^{s}exp(h_{i}^{t})}
-$$
+
+![8ChRgS.png](https://s2.ax1x.com/2020/03/10/8ChRgS.png)
+
 其中h是指由attention计算得到的在尺寸为s的图片中位置i的score map，且w是所有通道共享的参数。  
 ![3z3UJJ.png](https://s2.ax1x.com/2020/03/08/3z3UJJ.png)  
 
@@ -165,15 +158,8 @@ MA-CNN讨论了卷积、信道分组和局部分类子网，以全图像为输�
 首先，整个网络以下图 (a)中的全尺寸图像作为输入，将其送入下(b)中的卷积层中，提取基于区域的特征表示。其次，通过对(d)中的信道分组和加权层，生成 (e)中的多个部分注意图，然后使用sigmoid函数生成概率。其结果部分表征是由具有空间注意机制的基于区域的特征表征汇聚而成，如(f)所示。每一组概率得分/每一部分细粒度分类预测由全连通层和softmax层(g)得到,我们提出的MA-CNN通过交替学习每个部件表示上的softmax损失和每个部件注意图上的信道分组损失来优化，使其收敛。  
 ![8SMsfA.png](https://s2.ax1x.com/2020/03/09/8SMsfA.png)  
 ### Multi-Attention CNN for Part Localization   
-$$
-P_{i}(x)=\sum_{j=1}^{c}([W*X]_{j}\cdot M_{i})
-$$
-$$
-M_{i}(x)=sigmoid(\sum_{j=1}^{c}d_{j}[W*X]_{j})  
-$$
-$$
-d_{i}(x)=f_{i}(W*X)
-$$
+![8ChTNq.png](https://s2.ax1x.com/2020/03/10/8ChTNq.png)
+
 其中，W * X是指对输入图片X进行卷积网络处理，W是卷积网络参数。FC 层 f(.)输入的是特征，输出的每一个channel的权重向量。  
 
 ## Look Closer to See Better: Recurrent Attention Convolutional Neural Network for Fine-grained Image Recognition  
@@ -185,27 +171,27 @@ RA-CNN 通过尺度内分类损失（intra-scale classification loss）和尺度
 ![8ScHIg.png](https://s2.ax1x.com/2020/03/09/8ScHIg.png)  
 ### Attention Proposal Network  
 首先我们定义如下公式为提取图片特征的卷积预处理，W为卷积层参数,X为输入图片；
-$$
-W_{c}*X
-$$
+
+![8ChLgU.png](https://s2.ax1x.com/2020/03/10/8ChLgU.png)
+
 我们让我们的模型在每一个尺度输出两个结果，第一个结果是输出一个针对所有的子类的概率分布P，f函数代表的全连接层和一个softmax；
-$$
-P(x)=f(W_{c}*X)  
-$$
+
+![8C4VDH.png](https://s2.ax1x.com/2020/03/10/8C4VDH.png)
+
 另一个输出为关注对象的边界盒子的坐标及大小；g函数就是APN网络，下标x,y是坐标，下标l是正方形边长的一半；
-$$
-[t_{x},t_{y},t_{l}]=g(W_{c}*X)  
-$$
+
+![8C4nUI.png](https://s2.ax1x.com/2020/03/10/8C4nUI.png)
+
 根据输出的坐标及边长我们就可以对注意的目标进行定位于放大。
 ### Loss Function  
 损失函数分为两部分：inter-scale pairwise ranking loss和pairwise ranking loss
-$$
-L(x)=\sum_{s=1}^{3}{L_{cls}(Y^{(s)},Y^{*})}+\sum_{s=1}^{2}{L_{rank}(p_{t}^{(s)},p_{t}^{(s+1)})} 
-$$
+
+![8C41xS.png](https://s2.ax1x.com/2020/03/10/8C41xS.png)
+
 其中s代表的是尺度，损失函数的前半部分是尺度内分类损失，Y(s)是不同尺度的图片输出的标签向量，Y * 是真的标签向量，他优化的是卷积层和优化层的参数。第二部分是尺度间排序损失；
-$$
-L_{rank}(p_{t}^{(s)},p_{t}^{(s+1)})=max｛0,p_{t}^{(s)}-p_{t}^{(s+1)}+margin｝
-$$
+
+![8C4Nan.png](https://s2.ax1x.com/2020/03/10/8C4Nan.png)
+
 这种设计可以使网络以粗糙尺度的预测为参考，通过加强精细尺度的网络工作来逐步逼近最具鉴别性的区域，从而产生更可靠的预测。  
 
 ## An Empirical Study of Spatial Attention Mechanisms in Deep Networks  
@@ -220,11 +206,12 @@ Attention模型在自然语言处理上的成功使得人们想把它运用到�
 + key的内容  
 + 相对位置  
 注意力权重就可以写成以上四项的和:  
-$$
-（\varepsilon _{1}，\varepsilon _{2}，\varepsilon _{3}，\varepsilon _{4}）
-$$
+
+![8C4ose.png](https://s2.ax1x.com/2020/03/10/8C4ose.png)
+
 ![8pZkhq.png](https://s2.ax1x.com/2020/03/09/8pZkhq.png)  
 在论文中，作者提出三个重要发现，
+
 1. 在Transformer的检测模块中，查询敏感词，特别是查询词和关键内容词在self-attention中起着次要的作用。但在编码器和解码器的关注中，查询和关键字是至关重要的。
 2. 虽然可变形卷积技术仅基于查询查询和相对位置项来实现注意机制，但它在图像识别中比变形卷积技术更有效。  
 3. 在self-attention中，查询内容、相对位置和关键内容是最重要的因素。
@@ -232,28 +219,21 @@ $$
 ### Study of Spatial Attention Mechanisms  
 我们开发了一个广义的attention公式化，能够代表各种模块的设计。
 以下是multi-head attention feature计算公式：
-$$
-y_{q}=\sum_{m=1}^{M}W_{m}[\sum_{k\in \Omega _{q}}^{}A_{m}(q,k,z_{q},x_{k})\odot W_{m}^{'}x_{k}]  
-$$
+
+![8C5Pds.png](https://s2.ax1x.com/2020/03/10/8C5Pds.png)
+
 其中q是query element(Zq)的索引，k是key element(Xk)的索引，m是head数目，W是参数。  
 #### Transformer attention  
-$$
-A_{m}^{Trans}(q,k,z_{q},x_{k})\propto exp(\sum_{j=1}^{4}\varepsilon _{j})
-$$
+![8C5tyD.png](https://s2.ax1x.com/2020/03/10/8C5tyD.png)
+
 其中；
-$$
-\varepsilon _{1}=z_{q}^{T}U_{m}^{T}V_{m}^{C}x_{k} 
-$$
-$$
-\varepsilon _{2}=z_{q}^{T}U_{m}^{T}V_{m}^{R}R_{k-q} 
-$$
+
+![8C57lT.png](https://s2.ax1x.com/2020/03/10/8C57lT.png)
+
 这两项对query content比较敏感，其中U,V是可以学习的embedding matrices，Rk-q是通过计算将相对位置映射到高维空间以后的结果。  
-$$
-\varepsilon _{3}=u_{m}^{T}V_{m}^{C}C_{k}  
-$$
-$$
-\varepsilon _{4}=v_{m}^{T}V_{m}^{R}R_{k-q}  
-$$
+
+![8C5bXF.png](https://s2.ax1x.com/2020/03/10/8C5bXF.png)
+
 这两项对query content无关，v,u是可以学习的向量。  
 
 ## Look and Think Twice: Capturing Top-Down Visual Attention with Feedback Convolutional Neural Networks∗  
