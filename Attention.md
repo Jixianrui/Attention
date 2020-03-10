@@ -193,48 +193,46 @@ RA-CNN 通过尺度内分类损失（intra-scale classification loss）和尺度
 ![8C4Nan.png](https://s2.ax1x.com/2020/03/10/8C4Nan.png)
 
 这种设计可以使网络以粗糙尺度的预测为参考，通过加强精细尺度的网络工作来逐步逼近最具鉴别性的区域，从而产生更可靠的预测。  
-
 ## An Empirical Study of Spatial Attention Mechanisms in Deep Networks  
-本文将Transformer attention和deformable convo- lution和dynamic convolution modules中所应用的self-attention进行试验比较后，发现了一些特点。比如query and keycontent在Transformer中的作用非常小，但是在encode-decode中的作用却比较大。另一方面，合理的结合deformable convolution和key content可以得到更好的结果。  
+本文将Transformer attention和deformable convolution和dynamic convolution modules中所应用的self-attention进行经验比较后，取得了一些更加深入的理解。比如query and key content的比较在Transformer中的作用非常小，但是在encode-decode中的作用却非常重要。另一方面，合理的结合deformable convolution和key content可以得到更好的结果。本论文的研究结果表明，空间注意力机制的设计存在很大的改进空间。  
 ### Introduction Attention  
 Attention模型在自然语言处理上的成功使得人们想把它运用到计算机视觉上，然后Transformer的变种就被运用到了识别工作中，比如object detection和semantic segmentation，在这里，query和key就是指图片像素或者感兴趣的区域。  
 决定注意力权重的因素通常就三个；query content，key content 和query与key的相对位置。  
 对于self-attention的情况，query content可以是图像中查询像素处的特征，也可以是一个句子中的一个单词的特征。key是query的邻域像素，或者句子中的另个单词。  
-因此在学习一个key相对于query的权重时，可以分出四个重要因素：  
+因此在学习一个key相对于query的权重时，可以考虑以下四个重要因素：  
 + query,key的内容  
 + query的内容和相对位置  
-+ key的内容  
++ key的内容    
 + 相对位置  
-注意力权重就可以写成以上四项的和:  
-
-![8C4ose.png](https://s2.ax1x.com/2020/03/10/8C4ose.png)
-
+以上四项注意力权重可以写成:  (E_1, E_2, E_3, E_4)
 ![8pZkhq.png](https://s2.ax1x.com/2020/03/09/8pZkhq.png)  
 在论文中，作者提出三个重要发现，
-
-1. 在Transformer的检测模块中，查询敏感词，特别是查询词和关键内容词在self-attention中起着次要的作用。但在编码器和解码器的关注中，查询和关键字是至关重要的。
-2. 虽然可变形卷积技术仅基于查询查询和相对位置项来实现注意机制，但它在图像识别中比变形卷积技术更有效。  
-3. 在self-attention中，查询内容、相对位置和关键内容是最重要的因素。
-并且，作者提出了一个观点，注意力模块的设计相对于self-attention的固有特征更加决定学习机最终的结果。  
+1.  在 Transformer Attention 模块中，对 query 敏感的项，尤其是 query 和 key 内容项 (E_1)，在 Self-Attention中起着微不足道的作用。但在Encoder-Decoder Attention中，query 和 key 内容项 (E_1 )至关重要。   
+2.  尽管deformable convolution仅利用基于query content和相对位置项(E_2)的注意力机制，但它在图像识别方面比在Transformer Attention中对应的项(E_2)更有效且高效 。  
+3.  在Self Attention中，query content内容和相对位置项(E_2)以及仅考虑 key 内容的项(E_3)是最重要的。将deformable convolution与 Transformer Attention 中仅考虑 key 内容的项(E_3)进行适当组合会提供比 Transformer Attention 模块更高的精度，且在图像识别任务上具有更少的计算量 。  
+    人们普遍认为的是E_1,E_2项在对注意力的影响更大，比如最近的Non-local和Criss-Cross模型都只用了E1项，并取得了理想的结果，这更加深了人们对这个观点的认可。但本文发现 这些仅具有query敏感项的注意力模块实际上与那些仅具有query无关项的注意力模块性能相当 ，因此作者认为注意力模型可能更注重模块的设计。 这一实证分析表明，深度网络中空间注意力机制的设计还有很大的改进空间 。
 ### Study of Spatial Attention Mechanisms  
 我们开发了一个广义的attention公式化，能够代表各种模块的设计。
 以下是multi-head attention feature计算公式：
 
 ![8C5Pds.png](https://s2.ax1x.com/2020/03/10/8C5Pds.png)
 
-其中q是query element(Zq)的索引，k是key element(Xk)的索引，m是head数目，W是参数。  
-#### Transformer attention  
+其中q是query element(Z_q)的索引，k是key element(X_k)的索引，m是head数目，W是可学习的参数，k遍历指定区域。  
+#### Transformer Attention  
 ![8C5tyD.png](https://s2.ax1x.com/2020/03/10/8C5tyD.png)
 
 其中；
 
 ![8C57lT.png](https://s2.ax1x.com/2020/03/10/8C57lT.png)
 
-这两项对query content比较敏感，其中U,V是可以学习的embedding matrices，Rk-q是通过计算将相对位置映射到高维空间以后的结果。  
+这两项对query content比较敏感，其中U,V是可以学习的embedding matrices，R_k-q是通过计算将相对位置映射到高维空间以后的结果。  
 
 ![8C5bXF.png](https://s2.ax1x.com/2020/03/10/8C5bXF.png)
 
 这两项对query content无关，v,u是可以学习的向量。  
+#### Deformable Convolution  
+​                                           ![8PkLR0.png](https://s2.ax1x.com/2020/03/10/8PkLR0.png)
+G 为双线性插值函数
 
 ## Look and Think Twice: Capturing Top-Down Visual Attention with Feedback Convolutional Neural Networks∗  
 人类在看一张图片的时候，可能第一眼看过去也看不到某些信息，但是根据第一次看到的结果，再仔细看的时候，就能发现一些明显的隐藏信息在第一眼的时候被忽略了，而神经网络也是一样，在传递的过程中也会忽略一些信息，而增加反馈机制，就能提高网络解决实际分类和定位的问题的有效性。  
